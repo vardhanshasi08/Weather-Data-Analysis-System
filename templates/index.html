@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeatherLab | Weather Data Intelligence</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<aside class="sidebar">
+  <a class="brand" href="/"><span class="brand-mark">✦</span><span><b>Weather<span>Lab</span></b><small>DATA INTELLIGENCE</small></span></a>
+  <div class="nav-label">WORKSPACE</div>
+  <nav>
+    <a class="active" href="#dashboard">▦ <span>Dashboard</span></a>
+    <a href="#upload">♧ <span>Upload dataset</span></a>
+    <a href="#analysis">⌁ <span>Analysis &amp; charts</span></a>
+    <a href="#records">▤ <span>Weather records</span></a>
+  </nav>
+  <div class="side-note"><span class="pulse"></span> SYSTEM READY<small>Historical data analysis</small></div>
+  <div class="side-foot">WEATHERLAB<br><small>Recorded observations only</small></div>
+</aside>
+<main class="main" id="dashboard">
+  <header class="topbar"><div><small>WEATHER DATA INTELLIGENCE</small><h2>Weather overview</h2></div><div class="user-chip">WL</div></header>
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="messages">{% for category, message in messages %}<div class="notice {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+  <section class="hero">
+    <div class="hero-copy">
+      <span class="tag">✧ &nbsp; HISTORICAL WEATHER ANALYTICS</span>
+      <h1>Understand your<br>weather data.<br><em>Discover the patterns.</em></h1>
+      <p>Upload recorded observations, explore temperature and rainfall patterns, and turn raw weather data into clear insights.</p>
+      <div class="actions"><a class="primary-btn" href="#upload">⇧ &nbsp; Upload weather CSV</a><a class="secondary-btn" href="#analysis">⌁ &nbsp; Explore analysis</a></div>
+      <div class="disclaimer">♧ &nbsp; Data-driven insights · No weather forecasting</div>
+    </div>
+    <div class="preview-card">
+      <div class="card-kicker"><span>ANALYSIS PREVIEW</span><b>✦ WEATHERLAB</b></div>
+      <h3>Your weather at a glance</h3>
+      <div class="preview-stats">
+        <div><small>RECORDS</small><strong>{{ stats.records }}</strong><label>observations stored</label></div>
+        <div><small>AVG TEMP</small><strong>{% if stats.temperature %}{{ stats.temperature.average }}<sup>°C</sup>{% else %}—{% endif %}</strong><label>across all records</label></div>
+      </div>
+      <div class="mini-bars" aria-label="Decorative historical data preview">{% for h in [25,43,34,64,52,78,58,88,68,48,72,55] %}<i style="height:{{ h }}%"></i>{% endfor %}</div>
+      <div class="chart-legend"><span><i></i> Historical observations</span><b>°C / mm / %</b></div>
+    </div>
+  </section>
+  <section class="section" id="metrics">
+    <div class="section-heading"><div><small>YOUR DATASET</small><h2>Key metrics</h2></div><span>Calculated from saved records</span></div>
+    <div class="metrics">
+      <article class="metric"><div class="metric-icon purple">▤</div><small>Total records</small><strong>{{ stats.records }}</strong><label>Weather observations</label></article>
+      <article class="metric"><div class="metric-icon cyan">♨</div><small>Average temperature</small><strong>{% if stats.temperature %}{{ stats.temperature.average }} <sup>°C</sup>{% else %}—{% endif %}</strong><label>Across all locations</label></article>
+      <article class="metric"><div class="metric-icon blue">◉</div><small>Average humidity</small><strong>{% if stats.humidity %}{{ stats.humidity.average }} <sup>%</sup>{% else %}—{% endif %}</strong><label>Relative humidity</label></article>
+      <article class="metric"><div class="metric-icon green">♧</div><small>Total rainfall</small><strong>{% if stats.rainfall %}{{ stats.rainfall.total }} <sup>mm</sup>{% else %}—{% endif %}</strong><label>Accumulated rainfall</label></article>
+    </div>
+  </section>
+  <section class="section" id="upload">
+    <div class="section-heading"><div><small>DATA IMPORT</small><h2>Upload dataset</h2></div><span>CSV · Maximum 10 MB</span></div>
+    <div class="upload-box"><div><div class="upload-symbol">⇧</div><h3>Import your weather observations</h3><p>Required columns: observation_date, location, temperature, humidity, rainfall</p></div>
+      <form action="/upload" method="post" enctype="multipart/form-data"><input type="file" name="file" accept=".csv" required><button class="primary-btn" type="submit">Upload CSV</button></form>
+    </div>
+  </section>
+  <section class="section" id="analysis">
+    <div class="section-heading"><div><small>WEATHER PATTERNS</small><h2>Analysis &amp; charts</h2></div><span>Monthly aggregation</span></div>
+    <div class="charts">
+      <article class="chart-card"><div><h3>Temperature trend</h3><p>Monthly average temperature · °C</p></div><img src="data:image/png;base64,{{ temp_chart }}" alt="Monthly average temperature chart"></article>
+      <article class="chart-card"><div><h3>Rainfall comparison</h3><p>Monthly total rainfall · mm</p></div><img src="data:image/png;base64,{{ rain_chart }}" alt="Monthly rainfall chart"></article>
+    </div>
+    <article class="table-card"><div class="table-title"><div><h3>Monthly weather summary</h3><p>Minimum, maximum and average readings by month</p></div></div><div class="table-wrap"><table><thead><tr><th>MONTH</th><th>TEMP MIN (°C)</th><th>TEMP MAX (°C)</th><th>TEMP AVG (°C)</th><th>HUMIDITY AVG (%)</th><th>RAINFALL (mm)</th></tr></thead><tbody>{% for m in months %}<tr><td>{{ m.month }}</td><td>{{ m.temperature_min }}</td><td>{{ m.temperature_max }}</td><td>{{ m.temperature_average }}</td><td>{{ m.humidity_average }}</td><td>{{ m.rainfall_total }}</td></tr>{% else %}<tr><td colspan="6" class="empty">Upload a CSV to see monthly analysis.</td></tr>{% endfor %}</tbody></table></div></article>
+  </section>
+  <section class="section" id="records">
+    <div class="section-heading"><div><small>DATABASE</small><h2>Weather records</h2></div><span>Latest 12 observations</span></div>
+    <article class="table-card"><div class="table-wrap"><table><thead><tr><th>DATE</th><th>LOCATION</th><th>TEMPERATURE (°C)</th><th>HUMIDITY (%)</th><th>RAINFALL (mm)</th><th>ACTION</th></tr></thead><tbody>{% for r in recent %}<tr><td>{{ r.observation_date }}</td><td>{{ r.location }}</td><td>{{ r.temperature }}</td><td>{{ r.humidity }}</td><td>{{ r.rainfall }}</td><td><button class="delete" onclick="deleteRecord({{ r.record_id }})">Delete</button></td></tr>{% else %}<tr><td colspan="6" class="empty">No records yet. Upload a CSV to get started.</td></tr>{% endfor %}</tbody></table></div></article>
+  </section>
+  <footer>WEATHERLAB · Weather Data Analysis System <span>Temperature °C &nbsp;·&nbsp; Humidity % &nbsp;·&nbsp; Rainfall mm</span></footer>
+</main>
+<script>
+async function deleteRecord(id) {
+  if (!confirm("Delete record #" + id + "?")) return;
+  const response = await fetch("/api/records/" + id, {method:"DELETE"});
+  const result = await response.json();
+  if (!response.ok) { alert(result.error || "Delete failed"); return; }
+  location.reload();
+}
+</script>
+</body></html>
